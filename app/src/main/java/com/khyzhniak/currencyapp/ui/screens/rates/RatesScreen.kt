@@ -1,5 +1,6 @@
 package com.khyzhniak.currencyapp.ui.screens.rates
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -18,10 +19,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRightAlt
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.SwapVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardDefaults.outlinedCardColors
@@ -82,10 +79,12 @@ fun test() {
         isObsolete = true,
         refreshState = RefreshState.Idle,
         onRefreshClick = { },
+        modifier = Modifier,
     )
 }
 
 
+@SuppressLint("SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RatesScreen(
@@ -103,30 +102,17 @@ fun RatesScreen(
     calculatedMapForTextFields: ConversionUiState,
     isObsolete: Boolean,
     refreshState: RefreshState,
-    onRefreshClick: () -> Unit
+    onRefreshClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
 
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
 
-    Scaffold(
-        topBar = {
-            Surface(shadowElevation = 8.dp) {
-                TopAppBar(title = {
-                    Text(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.headlineSmall,
-                        text = stringResource(R.string.currency_header_title)
-                    )
-                })
-            }
-        },
-        bottomBar = {},
-    ) { innerPadding ->
+
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
                 .pointerInput(Unit)
                 {
@@ -154,8 +140,8 @@ fun RatesScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(8.dp)
-                            .verticalScroll(scrollState),
+                            .verticalScroll(scrollState)
+                            .padding(8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     )
                     {
@@ -215,7 +201,7 @@ fun RatesScreen(
                 }
             }
         }
-    }
+
 }
 
 @Preview

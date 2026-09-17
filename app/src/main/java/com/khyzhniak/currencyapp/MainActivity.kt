@@ -49,8 +49,3 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Preview
-@Composable
-fun TestScreen(showBackground: Boolean = true){
-    LoginScreen()
-}
