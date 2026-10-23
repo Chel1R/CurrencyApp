@@ -18,8 +18,6 @@ interface ApiService {
         @Query("quotes") quotes : String,
         @Query("from") firstDate : String,
         @Query("to") secondDate : String,
-        @Query("group") group : String
+        @Query("group") group : String?
     ) : List<CurrencyRate>
-
-
 }

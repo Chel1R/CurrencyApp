@@ -3,10 +3,9 @@ package com.khyzhniak.currencyapp.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
-import com.khyzhniak.currencyapp.data.model.CurrencyRates
+import com.khyzhniak.currencyapp.domain.model.CurrencyRates
 import com.khyzhniak.currencyapp.domain.repository.CurrencyRepository
 import com.khyzhniak.currencyapp.ui.state.ConversionInput
-import com.khyzhniak.currencyapp.ui.theme.CurrencyAppTheme
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,10 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Locale
 import kotlin.collections.associate
 
@@ -65,12 +62,15 @@ class CurrencyViewModel @Inject constructor(
     val popularCurrencyRates =
         MutableStateFlow(listOf("EUR", "USD", "GBP", "PLN", "CHF", "AUD"))
 
-    private val _rates = MutableStateFlow<List<CurrencyRates>>(emptyList())
-    val rates = _rates.asStateFlow()
 
-
+    val rates : StateFlow<List<CurrencyRates>> = repository.observeRates()
+        .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
     val uiState : StateFlow<CurrencyUiState> = combine(
-        _rates,
+        rates,
         _refreshState
     ){
             rates, refresh ->
@@ -203,16 +203,7 @@ class CurrencyViewModel @Inject constructor(
     }
 
     init {
-        viewModelScope.launch {
-            observeRates()
-        }
         refreshRates()
-    }
-
-    private suspend fun observeRates() {
-        repository.observeRates().collect { newRates ->
-            _rates.value = newRates
-        }
     }
 
     fun refreshRates() {
@@ -225,17 +216,7 @@ class CurrencyViewModel @Inject constructor(
             } catch (e: Exception) {
                 _refreshState.value = RefreshState.Error("Couldn't refresh rates")
 
-                if (_rates.value.isEmpty()) {
-                    val cached = withTimeoutOrNull(2000) {
-                        repository.observeRates().first()
-                    }
-                    if (!cached.isNullOrEmpty()) {
-                        _rates.value = cached
-                    }
-                }
-
-
-                _isObsolete.value = _rates.value.isNotEmpty()
+                _isObsolete.value = rates.value.isNotEmpty()
             }
         }
     }

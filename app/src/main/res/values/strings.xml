@@ -3,4 +3,10 @@
     <string name="currency_header_title"><![CDATA[Currency & Expense Tracker]]></string>
     <string name="obsolete_error_message">Rates are obsolete</string>
     <string name="error_message">Something went wrong…</string>
+    <string name="Swap_Description">Change the currencies the other way around</string>
+    <string name="title_currency_converter">Currency Converter</string>
+    <string name="from_text">From</string>
+    <string name="amount_text">amount</string>
+    <string name="to_text">To</string>
+    <string name="result_text">result</string>
 </resources>

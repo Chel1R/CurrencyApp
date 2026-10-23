@@ -1,10 +1,10 @@
 package com.khyzhniak.currencyapp.data.local.mapper
 
 import com.khyzhniak.currencyapp.data.local.entity.CurrencyHistory
-import com.khyzhniak.currencyapp.data.model.CurrencyRates
+import com.khyzhniak.currencyapp.domain.model.CurrencyRates
 import com.khyzhniak.currencyapp.data.local.entity.CurrencyRatesTable
-import com.khyzhniak.currencyapp.data.model.HistoryGroup
-import com.khyzhniak.currencyapp.data.model.HistoryRates
+import com.khyzhniak.currencyapp.domain.model.HistoryGroup
+import com.khyzhniak.currencyapp.domain.model.HistoryRates
 import com.khyzhniak.currencyapp.data.remote.dto.CurrencyRate
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -50,8 +50,8 @@ fun LocalDate.toApiDateString() : String =
     format(DateTimeFormatter.ISO_LOCAL_DATE)
 
 
-fun HistoryGroup.toApiGroupValue(): String = when(this) {
-    HistoryGroup.DAILY -> "day"
+fun HistoryGroup.toApiGroupValue(): String? = when(this) {
+    HistoryGroup.DAILY -> null // Omit group query parameter for daily data
     HistoryGroup.WEEKLY -> "week"
     HistoryGroup.MONTHLY -> "month"
 }

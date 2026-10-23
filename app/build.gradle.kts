@@ -54,7 +54,10 @@ android {
 }
 
 dependencies {
+
     implementation(libs.androidx.core.ktx)
+
+
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -105,4 +108,8 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation("androidx.compose.material:material-icons-extended")
+
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
+
 }

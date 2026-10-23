@@ -6,12 +6,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowRightAlt
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,91 +19,115 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.khyzhniak.currencyapp.utils.toCountryFlag
+import com.khyzhniak.currencyapp.utils.getCurrencyDisplayName
 
 @Composable
 fun RatesListCard(
-    currencyList: Map<String,String>,
+    currencyList: Map<String, String>,
     mainCurrency: String,
-){
+) {
     ElevatedCard(
-        Modifier.fillMaxWidth().padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         shape = MaterialTheme.shapes.small,
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp)
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "All Exchange Rates",
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                IconButton(
+                    onClick = {}
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        tint = MaterialTheme.colorScheme.primary,
+                        contentDescription = "Button for refreshing currencies",
+                    )
+                }
+            }
+
             currencyList.forEach { (toCurrency, rate) ->
                 RateCard(
-                    mainCurrency = mainCurrency,
-                    toCurrency = toCurrency,
-                    rateFrom = "1",
+                    displayCurrency = toCurrency,
+                    baseCurrency = mainCurrency,
                     rateTo = rate
                 )
             }
         }
     }
 }
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun RateCard(
-    mainCurrency: String,
-    toCurrency: String,
-    rateFrom : String,
+    displayCurrency: String,
+    baseCurrency: String,
     rateTo: String,
-){
+) {
     Card(
-        Modifier.fillMaxWidth().padding(8.dp)
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        )
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             CurrencyPart(
-                currency = mainCurrency,
-                rate = rateFrom
-            )
-
-            Icon(
-                contentDescription = "",
-                imageVector = Icons.AutoMirrored.Filled.ArrowRightAlt,
-                tint = MaterialTheme.colorScheme.primary,
+                top = baseCurrency,
+                bottom = baseCurrency.getCurrencyDisplayName(),
             )
             CurrencyPart(
-                currency = toCurrency,
-                rate = rateTo
+                top = rateTo,
+                bottom = "per $displayCurrency",
+                alignment = Alignment.End,
+                fontWeightTop = FontWeight.Bold
             )
         }
     }
 }
 
-
 @Composable
 fun CurrencyPart(
-    currency : String,
-    rate: String
-){
-    Row(
-        modifier = Modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    top: String,
+    bottom: String,
+    fontWeightTop: FontWeight = FontWeight.Normal,
+    alignment: Alignment.Horizontal = Alignment.Start
+) {
+    Column(
+        horizontalAlignment = alignment
     ) {
         Text(
-            text = currency.toCountryFlag(),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold
+            text = top,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = fontWeightTop,
         )
         Text(
-            text = currency,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = rate,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold
+            text = bottom,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

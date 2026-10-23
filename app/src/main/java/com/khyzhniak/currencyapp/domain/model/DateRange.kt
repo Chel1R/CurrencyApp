@@ -1,4 +1,4 @@
-package com.khyzhniak.currencyapp.data.model
+package com.khyzhniak.currencyapp.domain.model
 
 import java.time.LocalDate
 

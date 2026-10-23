@@ -1,6 +1,7 @@
 package com.khyzhniak.currencyapp.ui.screens.rates
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,8 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.khyzhniak.currencyapp.R
 import com.khyzhniak.currencyapp.ui.components.CustomTextField
 import com.khyzhniak.currencyapp.utils.toCountryFlag
 
@@ -44,7 +47,12 @@ fun CurrencyConverterCard(
             .fillMaxWidth()
             .padding(8.dp),
         shape = MaterialTheme.shapes.small,
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
+
     ) {
         Column(
             modifier = Modifier
@@ -53,9 +61,9 @@ fun CurrencyConverterCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Currency Converter",
+                text = stringResource(R.string.title_currency_converter),
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
             Column(
                 modifier = Modifier.padding(top = 4.dp),
@@ -63,8 +71,8 @@ fun CurrencyConverterCard(
             ) {
 
                 InputBlock(
-                    title = "From",
-                    placeholder = "amount",
+                    title = stringResource(R.string.from_text),
+                    placeholder = stringResource(R.string.amount_text),
                     amount = fromAmountText,
                     onValueChange = onFromAmountChange,
                     currency = fromCurrency,
@@ -76,13 +84,12 @@ fun CurrencyConverterCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.SwapVert,
-                        contentDescription = "Change the currencies the other way around",
-                        tint = MaterialTheme.colorScheme.primary,
+                        contentDescription = stringResource(R.string.Swap_Description),
                     )
                 }
                 InputBlock(
-                    title = "To",
-                    placeholder = "result",
+                    title = stringResource(R.string.to_text),
+                    placeholder = stringResource(R.string.result_text),
                     amount = toAmountText,
                     onValueChange = onToResultChange,
                     currency = toCurrency,
@@ -112,6 +119,7 @@ fun InputBlock(
         Text(
             modifier = Modifier.align(Alignment.Start),
             text = title,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Row(
             Modifier.fillMaxWidth(),
@@ -130,7 +138,8 @@ fun InputBlock(
                 modifier = Modifier.weight(0.4f),
                 shape = MaterialTheme.shapes.medium,
                 colors = outlinedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 border = BorderStroke(
                     width = 1.dp,
