@@ -61,7 +61,7 @@ fun CurrencyConverterCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Currency Converter",
+                text = stringResource(R.string.title_currency_converter),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -71,8 +71,8 @@ fun CurrencyConverterCard(
             ) {
 
                 InputBlock(
-                    title = "From",
-                    placeholder = "amount",
+                    title = stringResource(R.string.from_text),
+                    placeholder = stringResource(R.string.amount_text),
                     amount = fromAmountText,
                     onValueChange = onFromAmountChange,
                     currency = fromCurrency,
@@ -88,8 +88,8 @@ fun CurrencyConverterCard(
                     )
                 }
                 InputBlock(
-                    title = "To",
-                    placeholder = "result",
+                    title = stringResource(R.string.to_text),
+                    placeholder = stringResource(R.string.result_text),
                     amount = toAmountText,
                     onValueChange = onToResultChange,
                     currency = toCurrency,

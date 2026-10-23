@@ -17,6 +17,8 @@ ui = "1.10.6"
 foundation = "1.11.4"
 uiGraphics = "1.11.4"
 material3 = "1.4.0"
+vico = "2.0.0-alpha.28"
+#foundationLayoutVersion = "1.12.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -42,6 +44,11 @@ androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+
+vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
+vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
+#androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayoutVersion" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

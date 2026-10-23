@@ -6,10 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.filled.CurrencyExchange
-import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.outlined.CurrencyExchange
-import androidx.compose.material.icons.outlined.ShowChart
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,7 +35,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.khyzhniak.currencyapp.R
+import com.khyzhniak.currencyapp.ui.screens.graph.GraphScreen
 import com.khyzhniak.currencyapp.ui.screens.rates.RatesScreen
+import com.khyzhniak.currencyapp.ui.viewmodels.ChartViewModel
 import com.khyzhniak.currencyapp.ui.viewmodels.CurrencyViewModel
 import kotlinx.serialization.Serializable
 
@@ -65,11 +64,13 @@ fun AppNavigation(navController: NavHostController){
 
     val showBottomBar = when{
         currentDestination?.hasRoute<Screen.RatesScreen>() == true -> true
+        currentDestination?.hasRoute<Screen.GraphScreen>() == true -> true
         else -> false
     }
 
     val topBarText : String? = when{
         currentDestination?.hasRoute<Screen.RatesScreen>() == true -> stringResource(R.string.currency_header_title)
+        currentDestination?.hasRoute<Screen.GraphScreen>() == true -> stringResource(R.string.currency_header_title)
         else -> null
     }
 
@@ -112,29 +113,6 @@ fun AppNavigation(navController: NavHostController){
                     modifier = Modifier.height(110.dp),
                     tonalElevation = 0.dp)
                 {
-//                    NavigationBarItem(
-//                        selected = currentDestination?.hasRoute<Screen.RatesScreen>() == true,
-//                        onClick = {
-//                            navController.navigate(Screen.RatesScreen)
-//                        },
-//                        icon = {
-//
-//                        },
-//                        alwaysShowLabel = false,
-//                    )
-//                    NavigationBarItem(
-//                        selected = currentDestination?.hasRoute<Screen.GraphScreen>() == true,
-//                        onClick = {
-//                            navController.navigate(Screen.GraphScreen)
-//                        },
-//                        icon = {
-//                            Icon(
-//                                imageVector = Icons.AutoMirrored.Filled.ShowChart,
-//                                contentDescription = "Currency exchange show chart screen"
-//                            )
-//                        },
-//                        alwaysShowLabel = false,
-//                    )
 
                     items.forEach {
                         item ->
@@ -216,7 +194,31 @@ fun AppNavigation(navController: NavHostController){
             }
 
             composable<Screen.GraphScreen>{
+                val viewModel : ChartViewModel = hiltViewModel()
 
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                val historyRates by viewModel.historyRates.collectAsStateWithLifecycle()
+
+                val fromCurrency by viewModel.fromCurrency.collectAsStateWithLifecycle()
+                val toCurrency by viewModel.toCurrency.collectAsStateWithLifecycle()
+
+                val refreshState by viewModel.refreshState.collectAsStateWithLifecycle()
+                val preset by viewModel.dateRangePreset.collectAsStateWithLifecycle()
+
+                val currencyList by viewModel.availableCurrencies.collectAsStateWithLifecycle()
+                GraphScreen(
+                    uiState = uiState,
+                    fromCurrency = fromCurrency,
+                    toCurrency = toCurrency,
+                    currencyList = currencyList,
+                    historyRates = historyRates,
+                    onToCurrencyChange = viewModel::onToChartCurrencyChange,
+                    onFromCurrencyChange = viewModel::onFromChartCurrencyChange,
+                    refreshState = refreshState,
+                    selectedPreset = preset,
+                    onDataRangePresetChange = viewModel::onDataRangePresetChange,
+                    modifier = Modifier.padding(innerPadding)
+                )
             }
         }
     }
