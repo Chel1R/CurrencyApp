@@ -22,7 +22,7 @@ An offline-first Android application for real-time currency conversion, exchange
     <td align="center">
       <img src="https://github.com/user-attachments/assets/211d7ee9-e802-4099-9460-046455f13367" width="260" alt="Main Converter" />
       <br />
-      <sub><b>Main Converter</b></sub>
+      <sub><b>Chart</b></sub>
     </td>
     <td align="center">
       <img src="https://github.com/user-attachments/assets/802212cd-03e7-4bd9-ba9e-0fee564ba943" width="260" alt="Currency Selection" />
