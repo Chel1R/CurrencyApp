@@ -6,6 +6,7 @@ import com.khyzhniak.currencyapp.domain.model.DateRangePreset
 import com.khyzhniak.currencyapp.domain.model.DateRange
 import com.khyzhniak.currencyapp.domain.model.HistoryRates
 import com.khyzhniak.currencyapp.domain.repository.CurrencyRepository
+import com.khyzhniak.currencyapp.domain.repository.UserSettingsRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -40,7 +41,8 @@ sealed class RefreshChartState{
 
 @HiltViewModel
 class ChartViewModel @Inject constructor(
-    private val repository: CurrencyRepository
+    private val repository: CurrencyRepository,
+    private val settingsRepository: UserSettingsRepository
 ): ViewModel() {
 
     private var _refreshState = MutableStateFlow<RefreshChartState>(RefreshChartState.Idle)

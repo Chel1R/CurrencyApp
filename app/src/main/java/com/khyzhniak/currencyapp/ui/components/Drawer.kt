@@ -1,23 +1,225 @@
 package com.khyzhniak.currencyapp.ui.components
 
-
-import androidx.compose.material3.DrawerValue
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.khyzhniak.currencyapp.domain.model.ThemeMode
+
+data class DrawerItem(
+    val label: String,
+    val icon: ImageVector,
+    val onClick: () -> Unit,
+    val selected: Boolean = false,
+    val badge: @Composable () -> Unit = {}
+)
 
 @Composable
-fun NavigationDrawer(){
-
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-
-
+fun NavigationDrawer(
+    drawerState: DrawerState,
+    drawerItems: List<DrawerItem>,
+    currentThemeMode: ThemeMode,
+    onThemeModeSelected: (ThemeMode) -> Unit,
+    currentMainCurrency: String,
+    onMainCurrencySelected: (String) -> Unit,
+    availableCurrencies: List<String> = listOf("UAH", "USD", "EUR", "GBP"),
+    content: @Composable () -> Unit
+) {
     ModalNavigationDrawer(
         drawerContent = {
+            ModalDrawerSheet(
+                modifier = Modifier.width(320.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        HeaderDrawerSection()
+
+                        drawerItems.forEach { item ->
+                            NavigationDrawerItem(
+                                label = { Text(text = item.label) },
+                                onClick = item.onClick,
+                                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                                icon = {
+                                    Icon(
+                                        imageVector = item.icon,
+                                        contentDescription = item.label
+                                    )
+                                },
+                                selected = item.selected,
+                                badge = { item.badge() }
+                            )
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+
+                        ThemeDrawerSection(
+                            currentThemeMode = currentThemeMode,
+                            onThemeModeSelected = onThemeModeSelected
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        CurrencyDrawerSection(
+                            currentMainCurrency = currentMainCurrency,
+                            onMainCurrencySelected = onMainCurrencySelected,
+                            availableCurrencies = availableCurrencies
+                        )
+                    }
+
+                    BottomDrawerSection()
+                }
+            }
         },
         drawerState = drawerState
-    ) { }
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun HeaderDrawerSection() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp, horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.CurrencyExchange,
+            contentDescription = "App Logo",
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = "CurrencyApp",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+fun ThemeDrawerSection(
+    currentThemeMode: ThemeMode,
+    onThemeModeSelected: (ThemeMode) -> Unit
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "App Theme",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            ThemeMode.entries.forEach { mode ->
+                val label = when (mode) {
+                    ThemeMode.LIGHT_THEME -> "Light"
+                    ThemeMode.DARK_THEME -> "Dark"
+                    ThemeMode.SYSTEM_THEME -> "System"
+                }
+                FilterChip(
+                    modifier = Modifier.weight(1f),
+                    selected = mode == currentThemeMode,
+                    onClick = { onThemeModeSelected(mode) },
+                    label = {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CurrencyDrawerSection(
+    currentMainCurrency: String,
+    onMainCurrencySelected: (String) -> Unit,
+    availableCurrencies: List<String>
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Main Base Currency",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            availableCurrencies.take(4).forEach { currency ->
+                FilterChip(
+                    modifier = Modifier.weight(1f),
+                    selected = currency == currentMainCurrency,
+                    onClick = { onMainCurrencySelected(currency) },
+                    label = {
+                        Text(
+                            text = currency,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun BottomDrawerSection() {
+    Text(
+        text = "Version 1.0.0",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+    )
 }

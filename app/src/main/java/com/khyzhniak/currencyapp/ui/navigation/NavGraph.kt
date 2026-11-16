@@ -6,9 +6,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.CurrencyExchange
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -17,8 +20,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -29,16 +34,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.khyzhniak.currencyapp.R
+import com.khyzhniak.currencyapp.ui.components.DrawerItem
+import com.khyzhniak.currencyapp.ui.components.NavigationDrawer
 import com.khyzhniak.currencyapp.ui.screens.graph.GraphScreen
 import com.khyzhniak.currencyapp.ui.screens.rates.RatesScreen
 import com.khyzhniak.currencyapp.ui.viewmodels.ChartViewModel
 import com.khyzhniak.currencyapp.ui.viewmodels.CurrencyViewModel
+import com.khyzhniak.currencyapp.ui.viewmodels.SettingsViewModel
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 sealed interface Screen {
@@ -47,178 +55,190 @@ sealed interface Screen {
 }
 
 data class BottomNavItem(
-    val label : String,
+    val label: String,
     val route: Any,
     val selectedIcon: ImageVector,
-    val unselectedIcon : ImageVector,
-    val contentDescription : String
+    val unselectedIcon: ImageVector,
+    val contentDescription: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppNavigation(navController: NavHostController){
+fun AppNavigation(navController: NavHostController) {
 
     val backStackEntry by navController.currentBackStackEntryAsState()
-
     val currentDestination = backStackEntry?.destination
 
-    val showBottomBar = when{
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
+    val themeMode by settingsViewModel.themeMode.collectAsStateWithLifecycle()
+    val currentMainCurrency by settingsViewModel.mainCurrency.collectAsStateWithLifecycle()
+
+    val showBottomBar = when {
         currentDestination?.hasRoute<Screen.RatesScreen>() == true -> true
         currentDestination?.hasRoute<Screen.GraphScreen>() == true -> true
         else -> false
     }
 
-    val topBarText : String? = when{
+    val topBarText: String? = when {
         currentDestination?.hasRoute<Screen.RatesScreen>() == true -> stringResource(R.string.currency_header_title)
         currentDestination?.hasRoute<Screen.GraphScreen>() == true -> stringResource(R.string.currency_header_title)
         else -> null
     }
 
+    val drawerItems = emptyList<DrawerItem>()
 
-    Scaffold(
+    NavigationDrawer(
+        drawerState = drawerState,
+        drawerItems = drawerItems,
+        currentThemeMode = themeMode,
+        onThemeModeSelected = settingsViewModel::onThemeModeSelected,
+        currentMainCurrency = currentMainCurrency,
+        onMainCurrencySelected = settingsViewModel::onMainCurrencySelected
+    ) {
+        Scaffold(
             topBar = {
-                topBarText?.let{ text ->
-                Surface(shadowElevation = 8.dp) {
-                    TopAppBar(title = {
-                        Text(
-                            color = MaterialTheme.colorScheme.onSurface,
-                            style = MaterialTheme.typography.headlineSmall,
-                            text = text
-                        )
-                    })
-                }
-            }},
-        bottomBar = {
-
-            val items = listOf(
-                BottomNavItem(
-                    label = "Rates",
-                    route = Screen.RatesScreen,
-                    selectedIcon = Icons.Filled.CurrencyExchange,
-                    unselectedIcon = Icons.Outlined.CurrencyExchange,
-                    contentDescription = ""
-                ),
-                BottomNavItem(
-                    label = "Chart",
-                    route = Screen.GraphScreen,
-                    selectedIcon = Icons.AutoMirrored.Filled.ShowChart,
-                    unselectedIcon = Icons.AutoMirrored.Outlined.ShowChart,
-                    contentDescription = ""
-                )
-
-            )
-
-            if (showBottomBar){
-                NavigationBar (
-                    modifier = Modifier.height(110.dp),
-                    tonalElevation = 0.dp)
-                {
-
-                    items.forEach {
-                        item ->
-                        val isSelected = currentDestination?.hierarchy?.any{
-                            it.hasRoute(item.route::class)} == true
-
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = {
-                                navController.navigate(item.route){
-                                    popUpTo(navController.graph.findStartDestination().id){
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                                    contentDescription = item.contentDescription
+                topBarText?.let { text ->
+                    Surface(shadowElevation = 8.dp) {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    text = text
                                 )
                             },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurface,
-                                indicatorColor = Color.Transparent
-                            )
+                            navigationIcon = {
+                                IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Menu,
+                                        contentDescription = "Open Navigation Drawer"
+                                    )
+                                }
+                            }
                         )
                     }
                 }
-            }
-        }
-    )
-    { innerPadding ->
-        NavHost(navController = navController, startDestination = Screen.RatesScreen){
-            composable<Screen.RatesScreen> {
-
-                val viewModel :  CurrencyViewModel = hiltViewModel()
-
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-                val rates by viewModel.rates.collectAsStateWithLifecycle()
-
-                val calculatedMapForTextFields by viewModel.conversionResult.collectAsStateWithLifecycle()
-
-                val fromCurrency by viewModel.fromCurrency.collectAsStateWithLifecycle()
-                val toCurrency by viewModel.toCurrency.collectAsStateWithLifecycle()
-
-                val calculatedCurrencies by viewModel.calculatedPopularCurrencies.collectAsStateWithLifecycle()
-                val mainCurrency by viewModel.mainCurrency.collectAsStateWithLifecycle()
-                val isObsolete by viewModel.isObsolete.collectAsStateWithLifecycle()
-
-                val refreshState by viewModel.refreshState.collectAsStateWithLifecycle()
-
-
-                val currencies = rates.map { it.code }
-
-
-
-                RatesScreen(
-                    toCurrency = toCurrency,
-                    fromCurrency = fromCurrency,
-                    currencyList = currencies,
-                    onFromAmountChange = viewModel::onAmountChange,
-                    onFromCurrencyChange = viewModel::onFromCurrencyChange,
-                    onToCurrencyChange = viewModel::onToCurrencyChange,
-                    onToResultChange = viewModel::onResultChange,
-                    uiState = uiState,
-                    onSwapClick = viewModel::onSwap,
-                    mainCurrency = mainCurrency,
-                    popularCurrencyList = calculatedCurrencies,
-                    calculatedMapForTextFields = calculatedMapForTextFields,
-                    isObsolete = isObsolete,
-                    refreshState = refreshState,
-                    onRefreshClick = viewModel::refreshRates,
-                    modifier = Modifier.padding(innerPadding)
+            },
+            bottomBar = {
+                val items = listOf(
+                    BottomNavItem(
+                        label = "Rates",
+                        route = Screen.RatesScreen,
+                        selectedIcon = Icons.Filled.CurrencyExchange,
+                        unselectedIcon = Icons.Outlined.CurrencyExchange,
+                        contentDescription = ""
+                    ),
+                    BottomNavItem(
+                        label = "Chart",
+                        route = Screen.GraphScreen,
+                        selectedIcon = Icons.AutoMirrored.Filled.ShowChart,
+                        unselectedIcon = Icons.AutoMirrored.Outlined.ShowChart,
+                        contentDescription = ""
+                    )
                 )
+
+                if (showBottomBar) {
+                    NavigationBar(
+                        modifier = Modifier.height(110.dp),
+                        tonalElevation = 0.dp
+                    ) {
+                        items.forEach { item ->
+                            val isSelected = currentDestination?.hierarchy?.any {
+                                it.hasRoute(item.route::class)
+                            } == true
+
+                            NavigationBarItem(
+                                selected = isSelected,
+                                onClick = {
+                                    navController.navigate(item.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                        contentDescription = item.contentDescription
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurface,
+                                    indicatorColor = Color.Transparent
+                                )
+                            )
+                        }
+                    }
+                }
             }
+        ) { innerPadding ->
+            NavHost(navController = navController, startDestination = Screen.RatesScreen) {
+                composable<Screen.RatesScreen> {
+                    val viewModel: CurrencyViewModel = hiltViewModel()
 
-            composable<Screen.GraphScreen>{
-                val viewModel : ChartViewModel = hiltViewModel()
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                    val rates by viewModel.rates.collectAsStateWithLifecycle()
+                    val calculatedMapForTextFields by viewModel.conversionResult.collectAsStateWithLifecycle()
+                    val fromCurrency by viewModel.fromCurrency.collectAsStateWithLifecycle()
+                    val toCurrency by viewModel.toCurrency.collectAsStateWithLifecycle()
+                    val calculatedCurrencies by viewModel.calculatedPopularCurrencies.collectAsStateWithLifecycle()
+                    val mainCurrency by viewModel.mainCurrency.collectAsStateWithLifecycle()
+                    val isObsolete by viewModel.isObsolete.collectAsStateWithLifecycle()
+                    val refreshState by viewModel.refreshState.collectAsStateWithLifecycle()
 
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                val historyRates by viewModel.historyRates.collectAsStateWithLifecycle()
+                    val currencies = rates.map { it.code }
 
-                val fromCurrency by viewModel.fromCurrency.collectAsStateWithLifecycle()
-                val toCurrency by viewModel.toCurrency.collectAsStateWithLifecycle()
+                    RatesScreen(
+                        toCurrency = toCurrency,
+                        fromCurrency = fromCurrency,
+                        currencyList = currencies,
+                        onFromAmountChange = viewModel::onAmountChange,
+                        onFromCurrencyChange = viewModel::onFromCurrencyChange,
+                        onToCurrencyChange = viewModel::onToCurrencyChange,
+                        onToResultChange = viewModel::onResultChange,
+                        uiState = uiState,
+                        onSwapClick = viewModel::onSwap,
+                        mainCurrency = mainCurrency,
+                        popularCurrencyList = calculatedCurrencies,
+                        calculatedMapForTextFields = calculatedMapForTextFields,
+                        isObsolete = isObsolete,
+                        refreshState = refreshState,
+                        onRefreshClick = viewModel::refreshRates,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
 
-                val refreshState by viewModel.refreshState.collectAsStateWithLifecycle()
-                val preset by viewModel.dateRangePreset.collectAsStateWithLifecycle()
+                composable<Screen.GraphScreen> {
+                    val viewModel: ChartViewModel = hiltViewModel()
 
-                val currencyList by viewModel.availableCurrencies.collectAsStateWithLifecycle()
-                GraphScreen(
-                    uiState = uiState,
-                    fromCurrency = fromCurrency,
-                    toCurrency = toCurrency,
-                    currencyList = currencyList,
-                    historyRates = historyRates,
-                    onToCurrencyChange = viewModel::onToChartCurrencyChange,
-                    onFromCurrencyChange = viewModel::onFromChartCurrencyChange,
-                    refreshState = refreshState,
-                    selectedPreset = preset,
-                    onDataRangePresetChange = viewModel::onDataRangePresetChange,
-                    modifier = Modifier.padding(innerPadding)
-                )
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                    val historyRates by viewModel.historyRates.collectAsStateWithLifecycle()
+                    val fromCurrency by viewModel.fromCurrency.collectAsStateWithLifecycle()
+                    val toCurrency by viewModel.toCurrency.collectAsStateWithLifecycle()
+                    val refreshState by viewModel.refreshState.collectAsStateWithLifecycle()
+                    val preset by viewModel.dateRangePreset.collectAsStateWithLifecycle()
+                    val currencyList by viewModel.availableCurrencies.collectAsStateWithLifecycle()
+
+                    GraphScreen(
+                        uiState = uiState,
+                        fromCurrency = fromCurrency,
+                        toCurrency = toCurrency,
+                        currencyList = currencyList,
+                        historyRates = historyRates,
+                        onToCurrencyChange = viewModel::onToChartCurrencyChange,
+                        onFromCurrencyChange = viewModel::onFromChartCurrencyChange,
+                        refreshState = refreshState,
+                        selectedPreset = preset,
+                        onDataRangePresetChange = viewModel::onDataRangePresetChange,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
             }
         }
     }
