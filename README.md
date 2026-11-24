@@ -20,19 +20,24 @@ An offline-first Android application for real-time currency conversion, exchange
 <table>
   <tr>
     <td align="center">
-      <img src="https://github.com/user-attachments/assets/211d7ee9-e802-4099-9460-046455f13367" width="260" alt="Main Converter" />
-      <br />
-      <sub><b>Chart</b></sub>
+      <img width="260" alt="Main Converter" src="https://github.com/user-attachments/assets/4ce787cf-8d02-4e33-8808-410cff2cd2af" />
+      <br/>
+      <sub><b>Convertor</b></sub>
     </td>
     <td align="center">
-      <img src="https://github.com/user-attachments/assets/802212cd-03e7-4bd9-ba9e-0fee564ba943" width="260" alt="Currency Selection" />
+      <img src="https://github.com/user-attachments/assets/af973ceb-dbb1-4c7b-af08-08da5020acc4" width="260" alt="Currency Selection" />
       <br />
       <sub><b>Currency Selection</b></sub>
     </td>
-    <td align="center">
-      <img src="https://github.com/user-attachments/assets/45d58664-9d8e-4cbd-a435-b1dc492f30e7" width="260" alt="Rate History" />
+     <td align="center">
+      <img src="https://github.com/user-attachments/assets/6f49f6cb-24fa-4240-9dfe-24c484ebdfc6" width="260" alt="Currency Selection" />
       <br />
-      <sub><b>Rate History</b></sub>
+      <sub><b>Drawer</b></sub>
+    </td>
+    <td align="center">
+      <img src="https://github.com/user-attachments/assets/c84ad8c3-d325-402f-a9cd-4f3d9d374c73"  width="260" alt="Chart" />
+      <br />
+      <sub><b>Chart</b></sub>
     </td>
   </tr>
 </table>
