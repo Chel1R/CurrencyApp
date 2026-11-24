@@ -1,12 +1,15 @@
 package com.khyzhniak.currencyapp.ui.screens.graph
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,46 +18,37 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 import com.khyzhniak.currencyapp.domain.model.DateRangePreset
 import com.khyzhniak.currencyapp.domain.model.HistoryRates
-import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.CartesianMeasuringContext
+import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLineComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartAxis
-import com.patrykandpatrick.vico.compose.cartesian.fullWidth
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.compose.cartesian.layer.CartesianLayerDimensions
+import com.patrykandpatrick.vico.compose.cartesian.layer.CartesianLayerPadding
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
-import com.patrykandpatrick.vico.compose.common.fill
-
-import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
-import com.patrykandpatrick.vico.core.cartesian.axis.Axis
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.data.ExtraStore
+import com.patrykandpatrick.vico.compose.common.Fill
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.Locale
-import kotlin.math.ceil
-import kotlin.math.floor
 import kotlin.math.roundToInt
-
-
 
 @Composable
 fun RateSummaryHeader(
@@ -114,26 +108,26 @@ fun RateSummaryHeader(
         )
     }
 }
+
 private const val LABEL_COUNT = 5
 private const val LABEL_SEGMENTS = LABEL_COUNT - 1
 private const val MAX_POINTS_BETWEEN_LABELS = 12
-
-private val monthYearFormatter = DateTimeFormatter.ofPattern("MMM yyyy", Locale.US)
-private val monthDayFormatter = DateTimeFormatter.ofPattern("MMM d", Locale.US)
-
 private data class ChartSample(
     val points: List<HistoryRates>,
     val labelSpacing: Int,
 )
 
+private val shortDateFormatter = DateTimeFormatter.ofPattern("dd.MM", Locale.US)
+private val compactMonthYearFormatter = DateTimeFormatter.ofPattern("MM.yy", Locale.US)
+
 private fun formatAxisDate(dateString: String, preset: DateRangePreset): String =
     try {
         val formatter = when (preset) {
-            DateRangePreset.ONE_YEAR, DateRangePreset.FIVE_YEARS -> monthYearFormatter
-            else -> monthDayFormatter
+            DateRangePreset.ONE_YEAR, DateRangePreset.FIVE_YEARS -> compactMonthYearFormatter
+            else -> shortDateFormatter
         }
         LocalDate.parse(dateString).format(formatter)
-    } catch (e: DateTimeParseException) {
+    } catch (_: DateTimeParseException) {
         dateString
     }
 
@@ -154,6 +148,10 @@ private fun sampledForChart(historyRates: List<HistoryRates>): ChartSample {
     return ChartSample(points = points, labelSpacing = spacesPerLabel)
 }
 
+private val CHART_HEIGHT = 240.dp
+private val Y_AXIS_WIDTH = 52.dp
+private val EDGE_PADDING = 20.dp
+
 @Composable
 fun CurrencyVicoChart(
     historyRates: List<HistoryRates>,
@@ -163,74 +161,87 @@ fun CurrencyVicoChart(
     if (historyRates.isEmpty()) return
 
     val sample = remember(historyRates) { sampledForChart(historyRates) }
+    val points = sample.points
 
     val modelProducer = remember { CartesianChartModelProducer() }
-    LaunchedEffect(sample) {
+    LaunchedEffect(points) {
         modelProducer.runTransaction {
-            lineSeries { series(sample.points.map { it.rate }) }
+            lineSeries { series(points.map { it.rate }) }
         }
     }
 
-    val xAxisFormatter = remember(sample, selectedPreset) {
-        CartesianValueFormatter { value, _, _ ->
-            val index = value.roundToInt().coerceIn(0, sample.points.lastIndex)
-            formatAxisDate(sample.points[index].date, selectedPreset)
-        }
+    val minY = points.minOf { it.rate } * 0.995
+    val maxY = points.maxOf { it.rate } * 1.005
+
+    val rangeProvider = remember(points) {
+        CartesianLayerRangeProvider.fixed(
+            minX = 0.0,
+            maxX = points.lastIndex.toDouble(),
+            minY = minY,
+            maxY = maxY
+        )
     }
 
-    val yAxisFormatter = remember {
-        CartesianValueFormatter { value, _, _ ->
-            String.format(Locale.US, "%.4f", value)
-        }
-    }
-
-    val axisValueOverrider = remember(sample) {
-        object : AxisValueOverrider {
-            override fun getMinY(minY: Double, maxY: Double, extraStore: ExtraStore): Double =
-                sample.points.minOf { it.rate } * 0.995
-
-            override fun getMaxY(minY: Double, maxY: Double, extraStore: ExtraStore): Double =
-                sample.points.maxOf { it.rate } * 1.005
-        }
-    }
-
-    val axisLabelComponent = rememberAxisLabelComponent(
-        color = MaterialTheme.colorScheme.onSurface,
-        textSize = 9.sp
+    val lineColor = MaterialTheme.colorScheme.primary
+    val lineFill = remember(lineColor) { LineCartesianLayer.LineFill.single(Fill(lineColor)) }
+    val lineStroke = remember { LineCartesianLayer.LineStroke.Continuous(thickness = 3.5.dp) }
+    val line = LineCartesianLayer.rememberLine(fill = lineFill, stroke = lineStroke, areaFill = null)
+    val lineLayer = rememberLineCartesianLayer(
+        lineProvider = LineCartesianLayer.LineProvider.series(line),
+        rangeProvider = rangeProvider
     )
 
-    CartesianChartHost(
-        chart = rememberCartesianChart(
-            rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(
-                    rememberLine(
-                        fill = LineCartesianLayer.LineFill.single(fill(MaterialTheme.colorScheme.primary)),
-                        thickness = 3.5.dp,
-                        areaFill = null
-                    )
-                ),
-                axisValueOverrider = axisValueOverrider
-            ),
-            startAxis = rememberStartAxis(
-                label = axisLabelComponent,
-                valueFormatter = yAxisFormatter,
-                itemPlacer = remember { VerticalAxis.ItemPlacer.count(count = { 4 }) }
-            ),
-            bottomAxis = rememberBottomAxis(
-                label = axisLabelComponent,
-                valueFormatter = xAxisFormatter,
-                itemPlacer = remember(sample.labelSpacing) {
-                    HorizontalAxis.ItemPlacer.default(
-                        spacing = sample.labelSpacing,
-                        addExtremeLabelPadding = false
+    val labelIndexes = remember(points, sample.labelSpacing) {
+        points.indices.filter { it % sample.labelSpacing == 0 }
+    }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth().height(CHART_HEIGHT)) {
+            Column(
+                modifier = Modifier.width(Y_AXIS_WIDTH).fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.End
+            ) {
+                for (i in 0..3) {
+                    val value = maxY - (maxY - minY) * i / 3
+                    Text(
+                        text = String.format(Locale.US, "%.4f", value),
+                        fontSize = 9.sp,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-            ),
-//            horizontalLayout = remember { HorizontalLayout.fullWidth() }
-        ),
-        modelProducer = modelProducer,
-        scrollState = rememberVicoScrollState(scrollEnabled = false),
-        zoomState = rememberVicoZoomState(zoomEnabled = false),
-        modifier = modifier.fillMaxWidth().height(280.dp)
-    )
+            }
+
+            CartesianChartHost(
+                chart = rememberCartesianChart(
+                    lineLayer,
+                    layerPadding = {
+                        CartesianLayerPadding(scalableStart = EDGE_PADDING, scalableEnd = EDGE_PADDING)
+                    }
+                ),
+                modelProducer = modelProducer,
+                scrollState = rememberVicoScrollState(scrollEnabled = false),
+                zoomState = rememberVicoZoomState(zoomEnabled = false),
+                modifier = Modifier.weight(1f).fillMaxHeight()
+            )
+        }
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Spacer(Modifier.width(Y_AXIS_WIDTH))
+            Row(
+                modifier = Modifier.weight(1f).padding(horizontal = EDGE_PADDING),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                labelIndexes.forEach { index ->
+                    Text(
+                        text = formatAxisDate(points[index].date, selectedPreset),
+                        fontSize = 9.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+    }
 }

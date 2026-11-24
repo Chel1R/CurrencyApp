@@ -3,8 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
-    //Ksp and hilt
-
     alias(libs.plugins.devtool.ksp)
     alias(libs.plugins.hilt.android)
 
@@ -25,6 +23,11 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -32,32 +35,25 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String","CURRENCY_URL","\"https://frankfurter.dev/\"")
+            buildConfigField("String", "CURRENCY_URL", "\"https://frankfurter.dev/\"")
         }
-        debug{
-            buildConfigField("String","CURRENCY_URL","\"https://frankfurter.dev/\"")
+        debug {
+            buildConfigField("String", "CURRENCY_URL", "\"https://frankfurter.dev/\"")
         }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-
-    kotlinOptions {
-        jvmTarget = "11"
     }
 
     buildFeatures {
         buildConfig = true
         compose = true
     }
+
+    kotlinOptions {
+        jvmTarget = "11"
+    }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
-
-
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -89,19 +85,20 @@ dependencies {
     implementation("com.squareup.moshi:moshi:1.15.2")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.2")
+
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
     implementation(libs.androidx.lifecycle)
 
     // Navigation
-    val nav_version = "2.9.7"
+    val navVersion = "2.9.7"
+    implementation("androidx.navigation:navigation-compose:$navVersion")
 
-    implementation("androidx.navigation:navigation-compose:$nav_version")
-
-    //Dagger
+    // Dagger / Hilt
     implementation("com.google.dagger:hilt-android:2.58")
     ksp("com.google.dagger:hilt-android-compiler:2.58")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
@@ -109,10 +106,10 @@ dependencies {
 
     implementation("androidx.compose.material:material-icons-extended")
 
+    // Vico Charts
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
 
-    //DataStore
+    // DataStore Preferences
     implementation(libs.datastore.preferences)
-
 }

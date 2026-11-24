@@ -1,5 +1,6 @@
 package com.khyzhniak.currencyapp.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -20,8 +23,13 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -29,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.khyzhniak.currencyapp.domain.model.ThemeMode
+import com.khyzhniak.currencyapp.utils.toCountryFlag
 
 data class DrawerItem(
     val label: String,
@@ -46,7 +55,7 @@ fun NavigationDrawer(
     onThemeModeSelected: (ThemeMode) -> Unit,
     currentMainCurrency: String,
     onMainCurrencySelected: (String) -> Unit,
-    availableCurrencies: List<String> = listOf("UAH", "USD", "EUR", "GBP"),
+    availableCurrencies: List<String> = listOf("USD", "EUR", "GBP", "UAH", "JPY", "CAD", "AUD", "CHF"),
     content: @Composable () -> Unit
 ) {
     ModalNavigationDrawer(
@@ -99,7 +108,6 @@ fun NavigationDrawer(
                         )
                     }
 
-                    BottomDrawerSection()
                 }
             }
         },
@@ -181,6 +189,12 @@ fun CurrencyDrawerSection(
     onMainCurrencySelected: (String) -> Unit,
     availableCurrencies: List<String>
 ) {
+    var showBottomSheet by remember { mutableStateOf(false) }
+
+    val currencies = remember(availableCurrencies) {
+        if (availableCurrencies.isNotEmpty()) availableCurrencies else listOf("USD", "EUR", "GBP", "UAH", "JPY", "CAD", "AUD", "CHF")
+    }
+
     Column(
         modifier = Modifier.padding(horizontal = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -191,35 +205,60 @@ fun CurrencyDrawerSection(
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Row(
+
+        OutlinedCard(
+            onClick = { showBottomSheet = true },
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            shape = MaterialTheme.shapes.medium,
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            ),
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
         ) {
-            availableCurrencies.take(4).forEach { currency ->
-                FilterChip(
-                    modifier = Modifier.weight(1f),
-                    selected = currency == currentMainCurrency,
-                    onClick = { onMainCurrencySelected(currency) },
-                    label = {
-                        Text(
-                            text = currency,
-                            style = MaterialTheme.typography.labelMedium,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                    }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = currentMainCurrency.toCountryFlag(),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = currentMainCurrency,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "Select Main Currency",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
     }
+
+    if (showBottomSheet) {
+        RatesBottomSheet(
+            currencyList = currencies,
+            onCurrencySelected = { selectedCurrency ->
+                onMainCurrencySelected(selectedCurrency)
+                showBottomSheet = false
+            },
+            onDismissRequest = { showBottomSheet = false }
+        )
+    }
 }
 
-@Composable
-fun BottomDrawerSection() {
-    Text(
-        text = "Version 1.0.0",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-    )
-}
