@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 
 import com.khyzhniak.currencyapp.domain.model.CurrencyRates
 import com.khyzhniak.currencyapp.domain.repository.CurrencyRepository
+import com.khyzhniak.currencyapp.domain.repository.UserSettingsRepository
 import com.khyzhniak.currencyapp.ui.state.ConversionInput
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -41,11 +42,11 @@ enum class ConvertDirection { FROM, TO }
 
 @HiltViewModel
 class CurrencyViewModel @Inject constructor(
-    private val repository: CurrencyRepository
+    private val repository: CurrencyRepository,
+    private val userSettingsRepository: UserSettingsRepository
 ) : ViewModel() {
 
 
-    //Refresh state for handling the refresh of the data
     private val _refreshState = MutableStateFlow<RefreshState>(RefreshState.Idle)
     val refreshState = _refreshState.asStateFlow()
 
@@ -53,11 +54,14 @@ class CurrencyViewModel @Inject constructor(
     val isObsolete = _isObsolete.asStateFlow()
     val convertedDirection = MutableStateFlow(ConvertDirection.FROM)
     val fromAmountState = MutableStateFlow("1")
-    val fromCurrency = MutableStateFlow("USD")
-    val toCurrency = MutableStateFlow("UAH")
+    val fromCurrency  = MutableStateFlow("UAH")
+    val toCurrency = MutableStateFlow(if (fromCurrency.value == "USD") "EUR" else "USD")
     val toAmountState = MutableStateFlow("")
-
-    val mainCurrency = MutableStateFlow("UAH")
+    val mainCurrency :StateFlow<String> = userSettingsRepository.mainCurrency.stateIn(
+        initialValue = "UAH",
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000)
+    )
 
     val popularCurrencyRates =
         MutableStateFlow(listOf("EUR", "USD", "GBP", "PLN", "CHF", "AUD"))
@@ -203,6 +207,16 @@ class CurrencyViewModel @Inject constructor(
     }
 
     init {
+
+        viewModelScope.launch {
+            userSettingsRepository.mainCurrency.collect {
+                savedCurrency ->
+                fromCurrency.value = savedCurrency
+                if (savedCurrency == toCurrency.value){
+                    toCurrency.value = if(savedCurrency == "USD") "EUR" else "USD"
+                }
+            }
+        }
         refreshRates()
     }
 

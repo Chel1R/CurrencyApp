@@ -5,9 +5,7 @@ import androidx.room.RoomDatabase
 import com.khyzhniak.currencyapp.data.local.dao.CurrencyDao
 import com.khyzhniak.currencyapp.data.local.dao.HistoryDao
 import com.khyzhniak.currencyapp.data.local.entity.CurrencyHistory
-import kotlin.reflect.KClass
 import com.khyzhniak.currencyapp.data.local.entity.CurrencyRatesTable
-
 
 @Database(
     entities = [CurrencyRatesTable::class, CurrencyHistory::class],
@@ -15,6 +13,6 @@ import com.khyzhniak.currencyapp.data.local.entity.CurrencyRatesTable
     exportSchema = false
 )
 abstract class CurrencyDataBase : RoomDatabase() {
-    abstract fun currencyDao() : CurrencyDao
-    abstract fun historyDao() : HistoryDao
+    abstract fun currencyDao(): CurrencyDao
+    abstract fun historyDao(): HistoryDao
 }
